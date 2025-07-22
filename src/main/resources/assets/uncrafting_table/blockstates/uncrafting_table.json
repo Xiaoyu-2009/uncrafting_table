@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "uncrafting_table:block/uncrafting_table"
+    },
+    "powered=true": {
+      "model": "uncrafting_table:block/uncrafting_table_glowing"
+    }
+  }
+}
