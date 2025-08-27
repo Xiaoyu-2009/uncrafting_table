@@ -1,7 +1,0 @@
-{
-  "uncrafting_table_activate": {
-    "sounds": [
-      "minecraft:block.note_block.chime"
-    ]
-  }
-}
