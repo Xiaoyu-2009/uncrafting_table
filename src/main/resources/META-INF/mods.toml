@@ -4,7 +4,7 @@ license="All rights reserved"
 
 [[mods]]
 modId="uncrafting_table"
-version="1.0.0"
+version="1.1.0"
 displayName="拆解台"
 # logoFile="pack.png"
 authors="Xiaoyu_2009"
