@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="[43,)"
 license="All rights reserved"
 
 [[mods]]
@@ -16,13 +16,13 @@ description='''
 [[dependencies.uncrafting_table]]
     modId="forge"
     mandatory=true
-    versionRange="[47,)"
+    versionRange="[43,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.uncrafting_table]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.20.1,1.21)"
+    versionRange="[1.19.2,1.20)"
     ordering="NONE"
-    side="BOTH" 
+    side="BOTH"

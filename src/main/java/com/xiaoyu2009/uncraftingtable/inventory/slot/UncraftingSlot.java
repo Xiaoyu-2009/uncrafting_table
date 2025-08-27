@@ -1,11 +1,12 @@
 package com.xiaoyu2009.uncraftingtable.inventory.slot;
 
 import com.xiaoyu2009.uncraftingtable.config.UncraftingConfig;
-import com.xiaoyu2009.uncraftingtable.inventory.UncraftingMenu;
 import com.xiaoyu2009.uncraftingtable.inventory.UncraftingContainer;
+import com.xiaoyu2009.uncraftingtable.inventory.UncraftingMenu;
 import com.xiaoyu2009.uncraftingtable.item.recipe.UncraftingRecipe;
-import net.minecraft.world.entity.player.Player;
+
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;

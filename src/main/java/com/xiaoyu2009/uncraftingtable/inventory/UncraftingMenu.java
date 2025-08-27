@@ -1,22 +1,31 @@
 package com.xiaoyu2009.uncraftingtable.inventory;
 
+import java.util.Arrays;
+import java.util.Map;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.xiaoyu2009.uncraftingtable.config.UncraftingConfig;
 import com.xiaoyu2009.uncraftingtable.init.ModBlocks;
 import com.xiaoyu2009.uncraftingtable.init.ModMenuTypes;
-import com.xiaoyu2009.uncraftingtable.init.ModRecipes;
 import com.xiaoyu2009.uncraftingtable.inventory.slot.AssemblySlot;
 import com.xiaoyu2009.uncraftingtable.inventory.slot.UncraftingResultSlot;
 import com.xiaoyu2009.uncraftingtable.inventory.slot.UncraftingSlot;
 import com.xiaoyu2009.uncraftingtable.item.recipe.UncraftingRecipe;
+
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.*;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.inventory.ResultContainer;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -29,20 +38,24 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.crafting.IShapedRecipe;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class UncraftingMenu extends AbstractContainerMenu {
 
     private static final String TAG_MARKER = "UncraftingTableMarker";
 
     private final UncraftingContainer uncraftingMatrix = new UncraftingContainer(this);
-    public final CraftingContainer assemblyMatrix = new TransientCraftingContainer(this, 3, 3);
-    private final CraftingContainer combineMatrix = new TransientCraftingContainer(this, 3, 3);
+    public final CraftingContainer assemblyMatrix = new CraftingContainer(this, 3, 3) {
+        @Override
+        public void setChanged() {
+            UncraftingMenu.this.slotsChanged(this);
+        }
+    };
+    private final CraftingContainer combineMatrix = new CraftingContainer(this, 3, 3) {
+        @Override
+        public void setChanged() {
+            UncraftingMenu.this.slotsChanged(this);
+        }
+    };
 
     public final Container tinkerInput = new UncraftingInputContainer(this);
     private final ResultContainer tinkerResult = new ResultContainer();
@@ -59,7 +72,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
     public Recipe<?> storedGhostRecipe = null;
 
     public static UncraftingMenu fromNetwork(int id, Inventory inventory, FriendlyByteBuf buffer) {
-        return new UncraftingMenu(id, inventory, inventory.player.level(), ContainerLevelAccess.NULL);
+        return new UncraftingMenu(id, inventory, inventory.player.level, ContainerLevelAccess.NULL);
     }
 
     public UncraftingMenu(int id, Inventory inventory, Level level, ContainerLevelAccess positionData) {
@@ -77,7 +90,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
 
         for (invX = 0; invX < 3; ++invX) {
             for (invY = 0; invY < 3; ++invY) {
-                this.addSlot(new UncraftingSlot(inventory.player, this.tinkerInput, this.uncraftingMatrix, this.assemblyMatrix, invY + invX * 3, 300000 + invY * 18, 17 + invX * 18));
+                this.addSlot(new UncraftingSlot(inventory.player, this.tinkerInput, this.uncraftingMatrix, this.assemblyMatrix, invY + invX * 3, 62 + invY * 18, 17 + invX * 18));
             }
         }
         for (invX = 0; invX < 3; ++invX) {
@@ -155,7 +168,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
                     }
                 }
 
-                this.uncraftingMatrix.numberOfInputItems = recipe instanceof UncraftingRecipe uncraftingRecipe ? uncraftingRecipe.count() : recipe.getResultItem(this.level.registryAccess()).getCount();
+                this.uncraftingMatrix.numberOfInputItems = recipe instanceof UncraftingRecipe uncraftingRecipe ? uncraftingRecipe.count() : recipe.getResultItem().getCount();
                 this.uncraftingMatrix.uncraftingCost = this.calculateUncraftingCost();
                 this.uncraftingMatrix.recraftingCost = 0;
 
@@ -249,27 +262,8 @@ public class UncraftingMenu extends AbstractContainerMenu {
     }
 
     private static Recipe<?>[] getRecipesFor(ItemStack inputStack, Level world) {
-        List<Recipe<?>> recipes = new ArrayList<>();
-
-        if (!inputStack.isEmpty()) {
-            for (Recipe<?> recipe : world.getRecipeManager().getRecipes()) {
-                if (isRecipeSupported(recipe) &&
-                        !recipe.isIncomplete() &&
-                        recipe.canCraftInDimensions(3, 3) &&
-                        !recipe.getIngredients().isEmpty() &&
-                        matches(inputStack, recipe.getResultItem(world.registryAccess())) &&
-                        UncraftingConfig.reverseRecipeBlacklist.get() == UncraftingConfig.disableUncraftingRecipes.get().contains(recipe.getId().toString())) {
-                    if (UncraftingConfig.flipUncraftingModIdList.get() == UncraftingConfig.blacklistedUncraftingModIds.get().contains(recipe.getId().getNamespace())) {
-                        recipes.add(recipe);
-                    }
-                }
-            }
-            for (UncraftingRecipe uncraftingRecipe : world.getRecipeManager().getAllRecipesFor(ModRecipes.UNCRAFTING_RECIPE.get())) {
-                if (uncraftingRecipe.isItemStackAnIngredient(inputStack)) recipes.add(uncraftingRecipe);
-            }
-        }
-
-        return recipes.toArray(new Recipe<?>[0]);
+        RecipeCacheManager cacheManager = RecipeCacheManager.getInstance(world);
+        return cacheManager.getRecipesFor(inputStack);
     }
 
     private static boolean isRecipeSupported(Recipe<?> recipe) {
@@ -296,26 +290,26 @@ public class UncraftingMenu extends AbstractContainerMenu {
 
         if (recipe != null && !recipe.isSpecial() && (!this.level.getGameRules().getBoolean(GameRules.RULE_LIMITED_CRAFTING) || ((ServerPlayer) this.player).getRecipeBook().contains(recipe))) {
             this.tinkerResult.setRecipeUsed(recipe);
-            this.tinkerResult.setItem(0, recipe.assemble(inventory, this.level.registryAccess()));
+            this.tinkerResult.setItem(0, recipe.assemble(inventory));
         } else {
             this.tinkerResult.setItem(0, ItemStack.EMPTY);
         }
     }
 
     private static boolean isValidMatchForInput(ItemStack inputStack, ItemStack resultStack) {
-        if (inputStack.is(ItemTags.PICKAXES) && resultStack.is(ItemTags.PICKAXES)) {
+        if (inputStack.is(Tags.Items.TOOLS_PICKAXES) && resultStack.is(Tags.Items.TOOLS_PICKAXES)) {
             return true;
         }
-        if (inputStack.is(ItemTags.AXES) && resultStack.is(ItemTags.AXES)) {
+        if (inputStack.is(Tags.Items.TOOLS_AXES) && resultStack.is(Tags.Items.TOOLS_AXES)) {
             return true;
         }
-        if (inputStack.is(ItemTags.SHOVELS) && resultStack.is(ItemTags.SHOVELS)) {
+        if (inputStack.is(Tags.Items.TOOLS_SHOVELS) && resultStack.is(Tags.Items.TOOLS_SHOVELS)) {
             return true;
         }
-        if (inputStack.is(ItemTags.HOES) && resultStack.is(ItemTags.HOES)) {
+        if (inputStack.is(Tags.Items.TOOLS_HOES) && resultStack.is(Tags.Items.TOOLS_HOES)) {
             return true;
         }
-        if (inputStack.is(ItemTags.SWORDS) && resultStack.is(ItemTags.SWORDS)) {
+        if (inputStack.is(Tags.Items.TOOLS_SWORDS) && resultStack.is(Tags.Items.TOOLS_SWORDS)) {
             return true;
         }
         if (inputStack.is(Tags.Items.TOOLS_BOWS) && resultStack.is(Tags.Items.TOOLS_BOWS)) {
@@ -335,14 +329,6 @@ public class UncraftingMenu extends AbstractContainerMenu {
         return false;
     }
 
-    public int getUncraftingCost() {
-        return this.uncraftingMatrix.uncraftingCost;
-    }
-
-    public int getRecraftingCost() {
-        return this.uncraftingMatrix.recraftingCost;
-    }
-
     private int calculateUncraftingCost() {
         if ((!UncraftingConfig.disableUncraftingOnly.get() || this.storedGhostRecipe instanceof UncraftingRecipe) && this.assemblyMatrix.isEmpty()) {
             return this.storedGhostRecipe instanceof UncraftingRecipe recipe ? recipe.cost() : (int) Math.round(countDamageableParts(this.uncraftingMatrix) * UncraftingConfig.uncraftingXpCostMultiplier.get());
@@ -360,8 +346,14 @@ public class UncraftingMenu extends AbstractContainerMenu {
 
         int cost = 0;
 
-        if (!ItemStack.isSameItem(input, output)) {
-            cost += this.assemblyMatrix.getItems().stream().filter(stack -> !stack.isEmpty()).toList().size();
+        if (!input.sameItem(output)) {
+            int nonEmptySlots = 0;
+            for (int i = 0; i < this.assemblyMatrix.getContainerSize(); i++) {
+                if (!this.assemblyMatrix.getItem(i).isEmpty()) {
+                    nonEmptySlots++;
+                }
+            }
+            cost += nonEmptySlots;
         }
 
         int enchantCost = countTotalEnchantmentCost(input);
@@ -372,7 +364,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
 
         cost = Math.max(1, cost);
 
-        return (int) Math.round(cost * UncraftingConfig.repairingXpCostMultiplier.get());
+        return (int) Math.round(Math.max(1, cost) * UncraftingConfig.repairingXpCostMultiplier.get());
     }
 
     private static int countTotalEnchantmentCost(ItemStack stack) {
@@ -528,5 +520,13 @@ public class UncraftingMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return !UncraftingConfig.disableEntireTable.get() && stillValid(this.positionData, player, ModBlocks.UNCRAFTING_TABLE.get());
+    }
+
+    public int getUncraftingCost() {
+        return this.uncraftingMatrix.uncraftingCost;
+    }
+
+    public int getRecraftingCost() {
+        return this.uncraftingMatrix.recraftingCost;
     }
 }

@@ -32,7 +32,7 @@ base {
 }
 
 java {
-    archivesBaseName = '拆解台1.20.1'
+    archivesBaseName = '拆解台1.19.2'
     toolchain.languageVersion = JavaLanguageVersion.of(17)
     
     compileJava {

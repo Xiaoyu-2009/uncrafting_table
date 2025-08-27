@@ -32,12 +32,12 @@ public record UncraftingRecipe(ResourceLocation recipeID, int cost, int width, i
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer container, RegistryAccess access) {
+    public ItemStack assemble(CraftingContainer container) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public ItemStack getResultItem(RegistryAccess access) {
+    public ItemStack getResultItem() {
         return new ItemStack(Items.AIR, this.count);
     }
 
@@ -63,11 +63,6 @@ public record UncraftingRecipe(ResourceLocation recipeID, int cost, int width, i
     @Override
     public RecipeType<?> getType() {
         return ModRecipes.UNCRAFTING_RECIPE.get();
-    }
-
-    @Override
-    public CraftingBookCategory category() {
-        return CraftingBookCategory.MISC;
     }
 
     @Override
