@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "minecraft:block/jungle_planks",
+    "up": "uncrafting_table:block/uncrafting_glow",
+    "north": "uncrafting_table:block/uncrafting_glow_side",
+    "east": "uncrafting_table:block/uncrafting_glow_side",
+    "south": "uncrafting_table:block/uncrafting_glow_side",
+    "west": "uncrafting_table:block/uncrafting_glow_side",
+    "particle": "uncrafting_table:block/uncrafting_glow_side"
+  }
+}

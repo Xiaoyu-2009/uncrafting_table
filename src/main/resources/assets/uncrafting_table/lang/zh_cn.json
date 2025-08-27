@@ -1,0 +1,8 @@
+{
+  "block.uncrafting_table.uncrafting_table": "拆解台",
+  "block.uncrafting_table.uncrafting_table.disabled": "此方块已被禁用",
+  "container.uncrafting_table.uncrafting_table": "拆解台",
+  "container.uncrafting_table.uncrafting_table.disabled_item": "拆解此物品已被配置禁用",
+  "container.uncrafting_table.uncrafting_table.uncrafting_disabled": "拆解功能已通过配置禁用",
+  "itemGroup.uncrafting_table": "拆解台"
+}
