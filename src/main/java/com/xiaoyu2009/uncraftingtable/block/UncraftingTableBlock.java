@@ -6,6 +6,8 @@ import com.xiaoyu2009.uncraftingtable.inventory.UncraftingMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -41,7 +43,7 @@ public class UncraftingTableBlock extends Block {
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult result) {
         if (UncraftingConfig.disableEntireTable.get()) {
-            player.displayClientMessage(Component.translatable("block.uncrafting_table.uncrafting_table.disabled"), true);
+            player.displayClientMessage(new TranslatableComponent("block.uncrafting_table.uncrafting_table.disabled"), true);
             return InteractionResult.PASS;
         }
         if (level.isClientSide()) {
@@ -75,14 +77,14 @@ public class UncraftingTableBlock extends Block {
     @Nullable
     @Override
     public MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-        return new SimpleMenuProvider((id, inv, player) -> new UncraftingMenu(id, inv, player.level(), ContainerLevelAccess.create(level, pos)),
-                Component.translatable("container.uncrafting_table.uncrafting_table"));
+        return new SimpleMenuProvider((id, inv, player) -> new UncraftingMenu(id, inv, player.level, ContainerLevelAccess.create(level, pos)),
+                new TranslatableComponent("container.uncrafting_table.uncrafting_table"));
     }
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable BlockGetter getter, List<Component> tooltip, TooltipFlag flag) {
         if (UncraftingConfig.disableEntireTable.get()) {
-            tooltip.add(Component.translatable("block.uncrafting_table.uncrafting_table.disabled").withStyle(ChatFormatting.RED));
+            tooltip.add(new TranslatableComponent("block.uncrafting_table.uncrafting_table.disabled").withStyle(ChatFormatting.RED));
         }
     }
 

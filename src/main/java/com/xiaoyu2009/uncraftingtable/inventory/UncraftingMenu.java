@@ -17,7 +17,7 @@ import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.ItemTags;
+
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -27,7 +27,6 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -37,7 +36,6 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.crafting.IShapedRecipe;
 
 public class UncraftingMenu extends AbstractContainerMenu {
@@ -45,8 +43,166 @@ public class UncraftingMenu extends AbstractContainerMenu {
     private static final String TAG_MARKER = "UncraftingTableMarker";
 
     private final UncraftingContainer uncraftingMatrix = new UncraftingContainer(this);
-    public final CraftingContainer assemblyMatrix = new TransientCraftingContainer(this, 3, 3);
-    private final CraftingContainer combineMatrix = new TransientCraftingContainer(this, 3, 3);
+    private final ItemStack[] assemblyItems = new ItemStack[9];
+    private final ItemStack[] combineItems = new ItemStack[9];
+    
+    public final CraftingContainer assemblyMatrix = new CraftingContainer(this, 3, 3) {
+        {
+            for (int i = 0; i < 9; i++) {
+                assemblyItems[i] = ItemStack.EMPTY;
+            }
+        }
+        
+        @Override
+        public int getContainerSize() { return 9; }
+        
+        @Override
+        public boolean isEmpty() {
+            for (ItemStack stack : assemblyItems) {
+                if (stack != null && !stack.isEmpty()) return false;
+            }
+            return true;
+        }
+        
+        @Override
+        public ItemStack getItem(int slot) {
+            return slot >= 0 && slot < 9 ? assemblyItems[slot] : ItemStack.EMPTY;
+        }
+        
+        @Override
+        public ItemStack removeItem(int slot, int amount) {
+            if (slot >= 0 && slot < 9 && assemblyItems[slot] != null && !assemblyItems[slot].isEmpty()) {
+                if (assemblyItems[slot].getCount() <= amount) {
+                    ItemStack result = assemblyItems[slot];
+                    assemblyItems[slot] = ItemStack.EMPTY;
+                    return result;
+                } else {
+                    return assemblyItems[slot].split(amount);
+                }
+            }
+            return ItemStack.EMPTY;
+        }
+        
+        @Override
+        public ItemStack removeItemNoUpdate(int slot) {
+            if (slot >= 0 && slot < 9) {
+                ItemStack result = assemblyItems[slot];
+                assemblyItems[slot] = ItemStack.EMPTY;
+                return result;
+            }
+            return ItemStack.EMPTY;
+        }
+        
+        @Override
+        public void setItem(int slot, ItemStack stack) {
+            if (slot >= 0 && slot < 9) {
+                assemblyItems[slot] = stack;
+                setChanged();
+            }
+        }
+        
+        @Override
+        public void setChanged() {
+            UncraftingMenu.this.slotsChanged(this);
+        }
+        
+        @Override
+        public boolean stillValid(Player player) {
+            return true;
+        }
+        
+        @Override
+        public void clearContent() {
+            for (int i = 0; i < 9; i++) {
+                assemblyItems[i] = ItemStack.EMPTY;
+            }
+        }
+        
+        @Override
+        public int getWidth() { return 3; }
+        
+        @Override
+        public int getHeight() { return 3; }
+    };
+    
+    private final CraftingContainer combineMatrix = new CraftingContainer(this, 3, 3) {
+        {
+            for (int i = 0; i < 9; i++) {
+                combineItems[i] = ItemStack.EMPTY;
+            }
+        }
+        
+        @Override
+        public int getContainerSize() { return 9; }
+        
+        @Override
+        public boolean isEmpty() {
+            for (ItemStack stack : combineItems) {
+                if (stack != null && !stack.isEmpty()) return false;
+            }
+            return true;
+        }
+        
+        @Override
+        public ItemStack getItem(int slot) {
+            return slot >= 0 && slot < 9 ? combineItems[slot] : ItemStack.EMPTY;
+        }
+        
+        @Override
+        public ItemStack removeItem(int slot, int amount) {
+            if (slot >= 0 && slot < 9 && combineItems[slot] != null && !combineItems[slot].isEmpty()) {
+                if (combineItems[slot].getCount() <= amount) {
+                    ItemStack result = combineItems[slot];
+                    combineItems[slot] = ItemStack.EMPTY;
+                    return result;
+                } else {
+                    return combineItems[slot].split(amount);
+                }
+            }
+            return ItemStack.EMPTY;
+        }
+        
+        @Override
+        public ItemStack removeItemNoUpdate(int slot) {
+            if (slot >= 0 && slot < 9) {
+                ItemStack result = combineItems[slot];
+                combineItems[slot] = ItemStack.EMPTY;
+                return result;
+            }
+            return ItemStack.EMPTY;
+        }
+        
+        @Override
+        public void setItem(int slot, ItemStack stack) {
+            if (slot >= 0 && slot < 9) {
+                combineItems[slot] = stack;
+                setChanged();
+            }
+        }
+        
+        @Override
+        public void setChanged() {
+            UncraftingMenu.this.slotsChanged(this);
+        }
+        
+        @Override
+        public boolean stillValid(Player player) {
+            return true;
+        }
+        
+        @Override
+        public void clearContent() {
+            for (int i = 0; i < 9; i++) {
+                combineItems[i] = ItemStack.EMPTY;
+            }
+        }
+        
+        @Override
+        public int getWidth() { return 3; }
+        
+        @Override
+        public int getHeight() { return 3; }
+    };
 
     public final Container tinkerInput = new UncraftingInputContainer(this);
     private final ResultContainer tinkerResult = new ResultContainer();
@@ -63,7 +219,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
     public Recipe<?> storedGhostRecipe = null;
 
     public static UncraftingMenu fromNetwork(int id, Inventory inventory, FriendlyByteBuf buffer) {
-        return new UncraftingMenu(id, inventory, inventory.player.level(), ContainerLevelAccess.NULL);
+        return new UncraftingMenu(id, inventory, inventory.player.level, ContainerLevelAccess.NULL);
     }
 
     public UncraftingMenu(int id, Inventory inventory, Level level, ContainerLevelAccess positionData) {
@@ -159,7 +315,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
                     }
                 }
 
-                this.uncraftingMatrix.numberOfInputItems = recipe instanceof UncraftingRecipe uncraftingRecipe ? uncraftingRecipe.count() : recipe.getResultItem(this.level.registryAccess()).getCount();
+                this.uncraftingMatrix.numberOfInputItems = recipe instanceof UncraftingRecipe uncraftingRecipe ? uncraftingRecipe.count() : recipe.getResultItem().getCount();
                 this.uncraftingMatrix.uncraftingCost = this.calculateUncraftingCost();
                 this.uncraftingMatrix.recraftingCost = 0;
 
@@ -220,7 +376,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
                     Enchantment ench = entry.getKey();
                     int level = entry.getValue();
 
-                    if (EnchantmentHelper.isEnchantmentCompatible(EnchantmentHelper.getEnchantments(result).keySet(), ench) && EnchantmentHelper.getTagEnchantmentLevel(ench, result) < level) {
+                    if (EnchantmentHelper.getItemEnchantmentLevel(ench, result) < level) {
                         result.enchant(ench, level);
                     }
                 }
@@ -242,7 +398,7 @@ public class UncraftingMenu extends AbstractContainerMenu {
     }
 
     private static boolean isIngredientProblematic(ItemStack ingredient) {
-        return (!ingredient.isEmpty() && ingredient.getItem().hasCraftingRemainingItem(ingredient)) || ingredient.is(Items.BARRIER);
+        return (!ingredient.isEmpty() && ingredient.getItem().hasCraftingRemainingItem()) || ingredient.is(Items.BARRIER);
     }
 
     private static ItemStack normalizeIngredient(ItemStack ingredient) {
@@ -273,43 +429,14 @@ public class UncraftingMenu extends AbstractContainerMenu {
 
         if (recipe != null && !recipe.isSpecial() && (!this.level.getGameRules().getBoolean(GameRules.RULE_LIMITED_CRAFTING) || ((ServerPlayer) this.player).getRecipeBook().contains(recipe))) {
             this.tinkerResult.setRecipeUsed(recipe);
-            this.tinkerResult.setItem(0, recipe.assemble(inventory, this.level.registryAccess()));
+            this.tinkerResult.setItem(0, recipe.assemble(inventory));
         } else {
             this.tinkerResult.setItem(0, ItemStack.EMPTY);
         }
     }
 
     private static boolean isValidMatchForInput(ItemStack inputStack, ItemStack resultStack) {
-        if (inputStack.is(ItemTags.PICKAXES) && resultStack.is(ItemTags.PICKAXES)) {
-            return true;
-        }
-        if (inputStack.is(ItemTags.AXES) && resultStack.is(ItemTags.AXES)) {
-            return true;
-        }
-        if (inputStack.is(ItemTags.SHOVELS) && resultStack.is(ItemTags.SHOVELS)) {
-            return true;
-        }
-        if (inputStack.is(ItemTags.HOES) && resultStack.is(ItemTags.HOES)) {
-            return true;
-        }
-        if (inputStack.is(ItemTags.SWORDS) && resultStack.is(ItemTags.SWORDS)) {
-            return true;
-        }
-        if (inputStack.is(Tags.Items.TOOLS_BOWS) && resultStack.is(Tags.Items.TOOLS_BOWS)) {
-            return true;
-        }
-        if (inputStack.is(Tags.Items.TOOLS_CROSSBOWS) && resultStack.is(Tags.Items.TOOLS_CROSSBOWS)) {
-            return true;
-        }
-        if (inputStack.is(Tags.Items.TOOLS_FISHING_RODS) && resultStack.is(Tags.Items.TOOLS_FISHING_RODS)) {
-            return true;
-        }
-
-        if (inputStack.is(Tags.Items.ARMORS) && resultStack.is(Tags.Items.ARMORS)) {
-            return inputStack.getEquipmentSlot() == resultStack.getEquipmentSlot();
-        }
-
-        return false;
+        return inputStack.getItem() == resultStack.getItem();
     }
 
     public int getUncraftingCost() {
@@ -337,8 +464,12 @@ public class UncraftingMenu extends AbstractContainerMenu {
 
         int cost = 0;
 
-        if (!ItemStack.isSameItem(input, output)) {
-            cost += this.assemblyMatrix.getItems().stream().filter(stack -> !stack.isEmpty()).toList().size();
+        if (!ItemStack.matches(input, output)) {
+            for (int i = 0; i < this.assemblyMatrix.getContainerSize(); i++) {
+                if (!this.assemblyMatrix.getItem(i).isEmpty()) {
+                    cost++;
+                }
+            }
         }
 
         int enchantCost = countTotalEnchantmentCost(input);

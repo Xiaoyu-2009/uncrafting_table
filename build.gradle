@@ -2,7 +2,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.minecraftforge.gradle' version '5.1.+'
 }
 
 version = "${minecraft_version}-${mod_version}"
@@ -32,19 +32,13 @@ base {
 }
 
 java {
-    archivesBaseName = '拆解台1.20.1'
+    archivesBaseName = '拆解台1.18.2'
     toolchain.languageVersion = JavaLanguageVersion.of(17)
-    
-    compileJava {
-        options.compilerArgs << '-Xlint:deprecation'
-        options.deprecation = true
-    }
 }
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
     mappings channel: mapping_channel, version: mapping_version
-    copyIdeResources = true
 
     runs {
         configureEach {

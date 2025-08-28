@@ -37,8 +37,8 @@ public class UncraftingResultSlot extends ResultSlot {
 
         this.tempRemainderMap.clear();
 
-        for (Recipe<CraftingContainer> recipe : player.level().getRecipeManager().getRecipesFor(RecipeType.CRAFTING, this.assemblyMatrix, this.player.level())) {
-            if (ItemStack.isSameItemSameTags(recipe.getResultItem(player.level().registryAccess()), stack)) {
+        for (Recipe<CraftingContainer> recipe : player.level.getRecipeManager().getRecipesFor(RecipeType.CRAFTING, this.assemblyMatrix, this.player.level)) {
+            if (ItemStack.isSameItemSameTags(recipe.getResultItem(), stack)) {
                 combined = false;
                 break;
             }
@@ -64,7 +64,7 @@ public class UncraftingResultSlot extends ResultSlot {
         this.checkTakeAchievements(stack);
 
         net.minecraftforge.common.ForgeHooks.setCraftingPlayer(player);
-        NonNullList<ItemStack> remainingItems = player.level().getRecipeManager().getRemainingItemsFor(RecipeType.CRAFTING, this.assemblyMatrix, player.level());
+        NonNullList<ItemStack> remainingItems = player.level.getRecipeManager().getRemainingItemsFor(RecipeType.CRAFTING, this.assemblyMatrix, player.level);
         net.minecraftforge.common.ForgeHooks.setCraftingPlayer(null);
 
         for(int i = 0; i < remainingItems.size(); ++i) {

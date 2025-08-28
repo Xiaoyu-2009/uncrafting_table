@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.xiaoyu2009.uncraftingtable.init.ModRecipes;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
@@ -17,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 import net.minecraftforge.common.crafting.IShapedRecipe;
 
 import org.jetbrains.annotations.Nullable;
@@ -32,12 +32,12 @@ public record UncraftingRecipe(ResourceLocation recipeID, int cost, int width, i
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer container, RegistryAccess access) {
+    public ItemStack assemble(CraftingContainer container) {
         return ItemStack.EMPTY;
     }
 
     @Override
-    public ItemStack getResultItem(RegistryAccess access) {
+    public ItemStack getResultItem() {
         return new ItemStack(Items.AIR, this.count);
     }
 
@@ -65,10 +65,6 @@ public record UncraftingRecipe(ResourceLocation recipeID, int cost, int width, i
         return ModRecipes.UNCRAFTING_RECIPE.get();
     }
 
-    @Override
-    public CraftingBookCategory category() {
-        return CraftingBookCategory.MISC;
-    }
 
     @Override
     public int getRecipeWidth() {
@@ -85,7 +81,7 @@ public record UncraftingRecipe(ResourceLocation recipeID, int cost, int width, i
         return this.resultItems();
     }
 
-    public static class Serializer implements RecipeSerializer<UncraftingRecipe> {
+    public static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<UncraftingRecipe> {
         @Override
         public UncraftingRecipe fromJson(ResourceLocation id, JsonObject json) {
             int cost = GsonHelper.getAsInt(json, "cost");

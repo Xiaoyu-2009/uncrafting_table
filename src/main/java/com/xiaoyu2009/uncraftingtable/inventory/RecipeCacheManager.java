@@ -46,7 +46,7 @@ public class RecipeCacheManager {
                     recipe.canCraftInDimensions(3, 3) &&
                     !recipe.getIngredients().isEmpty()) {
                 
-                ItemStack resultItem = recipe.getResultItem(level.registryAccess());
+                ItemStack resultItem = recipe.getResultItem();
                 if (!resultItem.isEmpty()) {
                     boolean shouldCache = true;
 
@@ -106,7 +106,7 @@ public class RecipeCacheManager {
         List<Recipe<?>> cachedRecipes = recipeCache.get(inputKey);
         if (cachedRecipes != null) {
             for (Recipe<?> recipe : cachedRecipes) {
-                ItemStack resultItem = recipe.getResultItem(level.registryAccess());
+                ItemStack resultItem = recipe.getResultItem();
                 if (matches(inputStack, resultItem)) {
                     recipes.add(recipe);
                 }

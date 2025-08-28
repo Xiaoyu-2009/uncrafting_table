@@ -1,10 +1,10 @@
 modLoader="javafml"
-loaderVersion="[47,)"
+loaderVersion="[40,)"
 license="All rights reserved"
 
 [[mods]]
 modId="uncrafting_table"
-version="1.1.0"
+version="1.0.0"
 displayName="拆解台"
 # logoFile="pack.png"
 authors="Xiaoyu_2009"
@@ -16,13 +16,13 @@ description='''
 [[dependencies.uncrafting_table]]
     modId="forge"
     mandatory=true
-    versionRange="[47,)"
+    versionRange="[40,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.uncrafting_table]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.20.1,1.21)"
+    versionRange="[1.18.2,1.19)"
     ordering="NONE"
-    side="BOTH" 
+    side="BOTH"

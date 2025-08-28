@@ -9,7 +9,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public class ModMenuTypes {
-    public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(ForgeRegistries.MENU_TYPES, UncraftingTableMod.MODID);
+    public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(ForgeRegistries.CONTAINERS, UncraftingTableMod.MODID);
 
     public static final RegistryObject<MenuType<UncraftingMenu>> UNCRAFTING = MENU_TYPES.register("uncrafting",
         () -> IForgeMenuType.create(UncraftingMenu::fromNetwork));

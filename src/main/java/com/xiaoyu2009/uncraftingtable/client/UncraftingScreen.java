@@ -1,17 +1,19 @@
 package com.xiaoyu2009.uncraftingtable.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.xiaoyu2009.uncraftingtable.UncraftingTableMod;
 import com.xiaoyu2009.uncraftingtable.config.UncraftingConfig;
 import com.xiaoyu2009.uncraftingtable.inventory.UncraftingMenu;
 import com.xiaoyu2009.uncraftingtable.network.NetworkHandler;
 import com.xiaoyu2009.uncraftingtable.network.UncraftingGuiPacket;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -104,42 +106,45 @@ public class UncraftingScreen extends AbstractContainerScreen<UncraftingMenu> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(graphics);
-        super.render(graphics, mouseX, mouseY, partialTicks);
-        this.renderTooltip(graphics, mouseX, mouseY);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(poseStack);
+        super.render(poseStack, mouseX, mouseY, partialTicks);
+        this.renderTooltip(poseStack, mouseX, mouseY);
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(this.font, this.title, 6, 6, 4210752, false);
+    protected void renderLabels(PoseStack poseStack, int mouseX, int mouseY) {
+        this.font.draw(poseStack, this.title, 6, 6, 4210752);
         if (UncraftingConfig.disableUncraftingOnly.get()) {
-            graphics.drawString(this.font, Component.translatable("container.uncrafting_table.uncrafting_table.uncrafting_disabled").withStyle(ChatFormatting.DARK_RED), 6, this.imageHeight - 96 + 2, 4210752, false);
+            this.font.draw(poseStack, new TranslatableComponent("container.uncrafting_table.uncrafting_table.uncrafting_disabled").withStyle(ChatFormatting.DARK_RED), 6, this.imageHeight - 96 + 2, 4210752);
         } else {
-            graphics.drawString(this.font, I18n.get("container.inventory"), 7, this.imageHeight - 96 + 2, 4210752, false);
+            this.font.draw(poseStack, I18n.get("container.inventory"), 7, this.imageHeight - 96 + 2, 4210752);
         }
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
+    protected void renderBg(PoseStack poseStack, float partialTicks, int mouseX, int mouseY) {
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem._setShaderTexture(0, TEXTURE);
+        
         int frameX = (this.width - this.imageWidth) / 2;
         int frameY = (this.height - this.imageHeight) / 2;
-        graphics.blit(TEXTURE, frameX, frameY, 0, 0, this.imageWidth, this.imageHeight);
+        this.blit(poseStack, frameX, frameY, 0, 0, this.imageWidth, this.imageHeight);
 
         UncraftingMenu tfContainer = this.menu;
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(this.leftPos, this.topPos, 0);
+        poseStack.pushPose();
+        poseStack.translate(this.leftPos, this.topPos, 0);
 
         for (int i = 0; i < 9; i++) {
             Slot uncrafting = tfContainer.getSlot(2 + i);
             Slot assembly = tfContainer.getSlot(11 + i);
 
             if (uncrafting.hasItem()) {
-                this.drawSlotAsBackground(graphics, uncrafting, assembly);
+                this.drawSlotAsBackground(poseStack, uncrafting, assembly);
             }
         }
-        graphics.pose().popPose();
+        poseStack.popPose();
 
         int costVal = tfContainer.getUncraftingCost();
         if (costVal > 0) {
@@ -150,7 +155,7 @@ public class UncraftingScreen extends AbstractContainerScreen<UncraftingMenu> {
             } else {
                 color = 0x80FF20;
             }
-            graphics.drawString(this.font, cost, frameX + 48 - this.font.width(cost), frameY + 38, color);
+            this.font.drawShadow(poseStack, cost, frameX + 48 - this.font.width(cost), frameY + 38, color);
         }
 
         costVal = tfContainer.getRecraftingCost();
@@ -162,52 +167,57 @@ public class UncraftingScreen extends AbstractContainerScreen<UncraftingMenu> {
             } else {
                 color = 0x80FF20;
             }
-            graphics.drawString(this.font, cost, frameX + 130 - this.font.width(cost), frameY + 38, color);
+            this.font.drawShadow(poseStack, cost, frameX + 130 - this.font.width(cost), frameY + 38, color);
         }
     }
 
-    private void drawSlotAsBackground(GuiGraphics graphics, Slot backgroundSlot, Slot appearSlot) {
-        int screenX = appearSlot.x;
-        int screenY = appearSlot.y;
+    private void drawSlotAsBackground(PoseStack poseStack, Slot backgroundSlot, Slot appearSlot) {
+        int screenX = appearSlot.x + this.leftPos;
+        int screenY = appearSlot.y + this.topPos;
         ItemStack itemStackToRender = backgroundSlot.getItem();
 
-        graphics.renderFakeItem(itemStackToRender, screenX, screenY);
+        this.itemRenderer.blitOffset = 50.0F;
+
+        this.itemRenderer.renderGuiItem(itemStackToRender, screenX, screenY);
+        this.itemRenderer.renderGuiItemDecorations(this.font, itemStackToRender, screenX, screenY, "");
 
         boolean itemBroken = UncraftingMenu.isMarked(itemStackToRender);
 
         RenderSystem.disableDepthTest();
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0D, 0.0D, 200.0D);
-        graphics.fill(appearSlot.x, appearSlot.y, appearSlot.x + 16, appearSlot.y + 16, itemBroken ? 0x80FF8b8b : 0x9f8b8b8b);
-        graphics.pose().popPose();
+        this.fill(poseStack, appearSlot.x, appearSlot.y, appearSlot.x + 16, appearSlot.y + 16, itemBroken ? 0x80FF8b8b : 0x9f8b8b8b);
         RenderSystem.enableDepthTest();
+
+        this.itemRenderer.blitOffset = 0.0F;
     }
 
     @Override
-    protected void renderTooltip(GuiGraphics graphics, int pX, int pY) {
+    protected void renderTooltip(PoseStack poseStack, int pX, int pY) {
         UncraftingMenu container = this.menu;
 
         for (int i = 0; i < 9; i++) {
             if (container.getCarried().isEmpty() && container.slots.get(2 + i).hasItem() && this.hoveredSlot == container.slots.get(11 + i) && !container.slots.get(11 + i).hasItem()) {
-                graphics.renderTooltip(this.font, container.slots.get(2 + i).getItem(), pX, pY);
+                this.renderTooltip(poseStack, container.slots.get(2 + i).getItem(), pX, pY);
+                return;
             }
         }
 
-        super.renderTooltip(graphics, pX, pY);
+        super.renderTooltip(poseStack, pX, pY);
     }
 
     private static class CycleButton extends Button {
         private final boolean up;
 
         CycleButton(int x, int y, boolean up, OnPress onClick) {
-            super(x, y, 14, 9, Component.empty(), onClick, message -> Component.empty());
+            super(x, y, 14, 9, new TextComponent(""), onClick);
             this.up = up;
         }
 
         @Override
-        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
             if (this.visible) {
-                this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
+                RenderSystem._setShaderTexture(0, TEXTURE);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 
                 int textureX = 176;
                 int textureY = 0;
@@ -216,7 +226,7 @@ public class UncraftingScreen extends AbstractContainerScreen<UncraftingMenu> {
 
                 if (!this.up) textureY += this.height;
 
-                graphics.blit(TEXTURE, this.getX(), this.getY(), textureX, textureY, this.width, this.height);
+                this.blit(poseStack, this.x, this.y, textureX, textureY, this.width, this.height);
             }
         }
     }
@@ -225,14 +235,16 @@ public class UncraftingScreen extends AbstractContainerScreen<UncraftingMenu> {
         private final boolean up;
 
         CycleButtonMini(int x, int y, boolean up, OnPress onClick) {
-            super(x, y, 7, 7, Component.empty(), onClick, message -> Component.empty());
+            super(x, y, 8, 6, new TextComponent(""), onClick);
             this.up = up;
         }
 
         @Override
-        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
             if (this.visible) {
-                this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
+                RenderSystem._setShaderTexture(0, TEXTURE);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 
                 int textureX = 176;
                 int textureY = 41;
@@ -241,7 +253,7 @@ public class UncraftingScreen extends AbstractContainerScreen<UncraftingMenu> {
 
                 if (!this.up) textureY += this.height;
 
-                graphics.blit(TEXTURE, this.getX(), this.getY(), textureX, textureY, this.width, this.height);
+                this.blit(poseStack, this.x, this.y, textureX, textureY, this.width, this.height);
             }
         }
     }
